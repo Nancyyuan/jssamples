@@ -19,6 +19,7 @@
       </p>
       <p>State transitions of the service worker associated with the current registration:</p>
       <ol id="states"></ol>
+      <p><strong id="register"></strong><p>
     <button id='readBarcode'>Read Barcode via Camera</button>
     <script>
 
@@ -69,7 +70,11 @@
         }
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./service-worker.js').then(registration => {
+                document.querySelector('#register').textContent = 'successed';
                 var serviceWorker;
+                ServiceWorker.addEventListener('statechange', function(statechangeevent) { 
+                    console.log(statechangeevent)
+                 } )   
                 if (registration.installing) {
                     serviceWorker = registration.installing;
                     document.querySelector('#kind').textContent = 'installing';
@@ -92,8 +97,8 @@
                 // might be unavailable or contain a syntax error.
                 document.querySelector('#register').textContent = 'failed: ' + error;
             });
-            
-           
+
+                    
        
         };
     </script>
