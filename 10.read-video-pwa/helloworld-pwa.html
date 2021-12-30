@@ -14,12 +14,22 @@
 
 <body>
     <h1>Hello World for PWA</h1>
+    <p>
+        The current registration represents the <strong id="kind"></strong> service worker.
+      </p>
+      <p>State transitions of the service worker associated with the current registration:</p>
+      <ol id="states"></ol>
     <button id='readBarcode'>Read Barcode via Camera</button>
     <script>
 
         let pScanner = null;
         let latestResult = null;
         var vConsole = new VConsole();
+        function logState(state) {
+        var liElement = document.createElement('li');
+        liElement.textContent = state;
+        document.querySelector('#states').appendChild(liElement);
+        }
         document.getElementById('readBarcode').onclick = async function() {
             Notification.requestPermission().then((result) => {
                 if (result === 'granted') {
@@ -59,35 +69,32 @@
         }
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./service-worker.js').then(registration => {
-           registration.onupdatefound = () => {
-               const installingWorker = registration.installing;
-               if (installingWorker == null) {
-                   console.log('installingworker is null.')
-                   return;
-               }
-               installingWorker.onstatechange = () => {
-                   if (installingWorker.state === 'installed') {
-                       console.log("pwa installed.")
-                       if (navigator.serviceWorker.controller) {
-                           // We will use this callback to present button to allow user to refresh 
-                           // the application
+                var serviceWorker;
+                if (registration.installing) {
+                    serviceWorker = registration.installing;
+                    document.querySelector('#kind').textContent = 'installing';
+                } else if (registration.waiting) {
+                    serviceWorker = registration.waiting;
+                    document.querySelector('#kind').textContent = 'waiting';
+                } else if (registration.active) {
+                    serviceWorker = registration.active;
+                    document.querySelector('#kind').textContent = 'active';
+                }
 
-                        //  // Execute callback
-                        //    if (config && config.onUpdate) {
-                        //        config.onUpdate(registration);
-                        //        console.log('pwa installed.')
-                        //    }
-                    
-                        } else {
-                            // Not necessary for this example
-                        }
-                    }
-                };
-            };
-        })
-        .catch(error => {
-            console.error('Error during service worker registration:', error);
-        });;
+                if (serviceWorker) {
+                    logState(serviceWorker.state);
+                    serviceWorker.addEventListener('statechange', function(e) {
+                        logState(e.target.state);
+                    });
+                }
+            }).catch(function(error) {
+                // Something went wrong during registration. The service-worker.js file
+                // might be unavailable or contain a syntax error.
+                document.querySelector('#register').textContent = 'failed: ' + error;
+            });
+            
+           
+       
         };
     </script>
 </body>
